@@ -128,7 +128,7 @@ docker-compose up -d --build
 Una vez que los contenedores estén corriendo, abre tu navegador en:
 
 ```
-http://localhost:3000
+http://localhost:8081
 ```
 
 ## 🛠️ Comandos Útiles
