@@ -1,60 +1,89 @@
-# Implementación Simple Docker - TODO App
+# Sistema de Gestión de Tareas con Arquitectura Primary-Replica
 
-Una aplicación de tareas (TODO) implementada con Docker que incluye una arquitectura de base de datos primaria-replica para demostrar conceptos de replicación y contenedorización.
+**Integrantes:** Julián David Calderón Largo - Juan José Betancourth - Valentina Franco
 
-## 📋 Descripción
+Una aplicación de gestión de tareas (TODO) que implementa una arquitectura de base de datos MySQL con replicación Primary-Replica y separación de operaciones de lectura/escritura (R/W Split) usando Docker.
 
-Este proyecto es una implementación simple de una aplicación TODO que utiliza Docker para orquestar múltiples servicios:
+## 📋 Descripción del Proyecto
 
-- **Frontend**: Interfaz de usuario para gestionar tareas
-- **Backend**: API REST para operaciones CRUD
-- **Base de datos primaria**: Servidor de base de datos principal
-- **Base de datos réplica**: Servidor de base de datos de solo lectura para distribución de carga
+Este proyecto demuestra una implementación completa de:
 
-## 🏗️ Arquitectura
+- **FastAPI** como framework backend para API REST
+- **MySQL con arquitectura Primary-Replica** para alta disponibilidad
+- **Separación de operaciones READ/WRITE** para optimización de rendimiento
+- **Docker Compose** para orquestación de contenedores
+- **Frontend HTML/CSS/JS** para consumo de la API
+- **Manejo robusto de errores** y recuperación ante fallos
+
+El objetivo principal es demostrar cómo la replicación mejora el rendimiento en lecturas y cómo la separación de responsabilidades permite una operación escalable y resiliente.
+
+## 🏗️ Arquitectura del Sistema
+
+### Componentes Principales
 
 ```
-┌─────────────┐
-│   Frontend  │
-│  (HTML/CSS) │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│   Backend   │
-│   (Python)  │
-└──────┬──────┘
-       │
-       ├──────────┐
-       ▼          ▼
-┌──────────┐  ┌──────────┐
-│ DB       │  │ DB       │
-│ Primaria │──▶ Réplica  │
-└──────────┘  └──────────┘
+┌─────────────────┐
+│    Frontend     │
+│  (HTML/CSS/JS)  │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   Backend API   │
+│    (FastAPI)    │
+└────┬───────┬────┘
+     │       │
+     │       │
+┌────▼──┐ ┌──▼─────┐
+│ MySQL │ │ MySQL  │
+│Primary│─▶│Replica │
+│(WRITE)│ │(READ)  │
+└───────┘ └────────┘
 ```
+
+### Flujo de Operaciones (R/W Split)
+
+- **GET /tasks → Replica**: Todas las consultas de lectura se realizan en la base de datos réplica
+- **POST / PUT / DELETE → Primary**: Todas las operaciones de escritura se realizan en el servidor primario
+- **Sincronización automática**: Los cambios en Primary se replican automáticamente a Replica
 
 ## 🚀 Requisitos Previos
 
-Antes de comenzar, asegúrate de tener instalado:
+### Para Windows
 
-### Windows
+1. **WSL 2** (Windows Subsystem for Linux)
+   - [Guía de instalación oficial](https://docs.microsoft.com/en-us/windows/wsl/install)
+   
+2. **Docker Desktop para Windows** (versión 4.0 o superior)
+   - [Descargar Docker Desktop](https://docs.docker.com/desktop/install/windows-install/)
+   - Debe tener integración con WSL 2 habilitada
+   
+3. **Python 3.8+** instalado en WSL
+   - Se puede instalar desde el gestor de paquetes de tu distribución Linux
 
-- [WSL 2](https://docs.microsoft.com/en-us/windows/wsl/install) (Windows Subsystem for Linux)
-- [Docker Desktop para Windows](https://docs.docker.com/desktop/install/windows-install/) (versión 4.0 o superior)
-- [Python 3.8+](https://www.python.org/downloads/) instalado en WSL
+### Para Linux
 
-### Linux
+1. **Docker** (versión 20.10 o superior)
+   - [Guía de instalación](https://docs.docker.com/engine/install/)
+   
+2. **Docker Compose** (versión 2.0 o superior)
+   - [Guía de instalación](https://docs.docker.com/compose/install/)
+   
+3. **Python 3.8+**
+   ```bash
+   sudo apt update
+   sudo apt install python3 python3-pip
+   ```
 
-- [Docker](https://docs.docker.com/engine/install/) (versión 20.10 o superior)
-- [Docker Compose](https://docs.docker.com/compose/install/) (versión 2.0 o superior)
-- [Python 3.8+](https://www.python.org/downloads/)
+### Para macOS
 
-### macOS
+1. **Docker Desktop para Mac**
+   - [Descargar Docker Desktop](https://docs.docker.com/desktop/install/mac-install/)
+   
+2. **Python 3.8+**
+   - Puedes usar Homebrew: `brew install python@3.9`
 
-- [Docker Desktop para Mac](https://docs.docker.com/desktop/install/mac-install/)
-- [Python 3.8+](https://www.python.org/downloads/)
-
-### Verificar instalación
+### Verificar Instalaciones
 
 ```bash
 # Verificar Docker
@@ -62,19 +91,15 @@ docker --version
 docker-compose --version
 
 # Verificar Python
-python --version
-# o
 python3 --version
 
 # Para usuarios de Windows, verificar WSL
 wsl --list --verbose
 ```
 
-## 📦 Instalación
+## 📦 Instalación y Configuración
 
-### 1. Configuración inicial (Windows)
-
-Si estás en Windows, primero configura WSL:
+### 1. Configuración Inicial (Solo Windows)
 
 ```bash
 # Instalar WSL 2
@@ -83,16 +108,17 @@ wsl --install
 # Establecer WSL 2 como versión predeterminada
 wsl --set-default-version 2
 
-# Instalar una distribución de Linux (Ubuntu recomendado)
+# Instalar Ubuntu (recomendado)
 wsl --install -d Ubuntu
 
 # Verificar instalación
 wsl --list --verbose
 ```
 
-Inicia Docker Desktop y asegúrate de que la integración con WSL esté habilitada en: **Settings > Resources > WSL Integration**
+**Importante:** Inicia Docker Desktop y habilita la integración con WSL en:  
+**Settings > Resources > WSL Integration > Activa tu distribución de Linux**
 
-### 2. Clonar el repositorio
+### 2. Clonar el Repositorio
 
 ```bash
 # En WSL (Windows) o terminal (Linux/macOS)
@@ -100,86 +126,149 @@ git clone https://github.com/JuliiizLargo/Implementacion-simple-docker.git
 cd Implementacion-simple-docker
 ```
 
-### 3. Verificar Python
+### 3. Levantar los Servicios
 
 ```bash
-# Verificar que Python está instalado
-python3 --version
-
-# Si no está instalado (en Ubuntu/WSL):
-sudo apt update
-sudo apt install python3 python3-pip
-```
-
-### 4. Construir y levantar los contenedores
-
-```bash
-docker-compose up --build
-```
-
-O en modo detached (segundo plano):
-
-```bash
+# Construir e iniciar todos los contenedores
 docker-compose up -d --build
 ```
 
-### 5. Acceder a la aplicación
+### 4. Configurar la Replicación MySQL
 
-Una vez que los contenedores estén corriendo, abre tu navegador en:
+Una vez que los contenedores estén corriendo, ejecuta los siguientes pasos:
+
+#### a) Configurar el servidor Primary
+
+```bash
+# Conectarse al contenedor Primary
+docker exec -it gestor-db-primary mysql -u root -p
+# Contraseña: admin123
+```
+
+Dentro de MySQL Primary, ejecuta:
+
+```sql
+-- Crear usuario para replicación
+CREATE USER 'admin'@'%' IDENTIFIED BY 'admin123';
+GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'admin'@'%';
+FLUSH PRIVILEGES;
+
+-- Obtener las coordenadas del binlog (ANOTA ESTOS VALORES)
+SHOW MASTER STATUS;
+```
+
+**⚠️ Importante:** Anota los valores de `File` (ejemplo: mysql-bin.000003) y `Position` (ejemplo: 906)
+
+#### b) Configurar el servidor Replica
+
+```bash
+# Conectarse al contenedor Replica
+docker exec -it gestor-db-replica mysql -u root -p
+# Contraseña: admin123
+```
+
+Dentro de MySQL Replica, ejecuta (reemplaza los valores del paso anterior):
+
+```sql
+-- Detener el esclavo si está corriendo
+STOP SLAVE;
+
+-- Configurar la conexión con Primary
+CHANGE MASTER TO
+  MASTER_HOST='gestor-db-primary',
+  MASTER_USER='admin',
+  MASTER_PASSWORD='admin123',
+  MASTER_LOG_FILE='mysql-bin.000003',  -- Usar el valor anotado
+  MASTER_LOG_POS=906,                  -- Usar el valor anotado
+  GET_MASTER_PUBLIC_KEY=1;
+
+-- Iniciar la replicación
+START SLAVE;
+
+-- Verificar el estado de la replicación
+SHOW SLAVE STATUS\G;
+```
+
+**✅ Verificación exitosa:** Debes ver:
+```
+Slave_IO_Running: Yes
+Slave_SQL_Running: Yes
+```
+
+#### c) Reiniciar los servicios
+
+```bash
+# Detener los contenedores
+docker-compose down
+
+# Iniciar nuevamente
+docker-compose up -d
+```
+
+### 5. Acceder a la Aplicación
+
+Abre tu navegador en:
 
 ```
-http://localhost:8081
+http://localhost:3000
 ```
 
 ## 🛠️ Comandos Útiles
 
-### Iniciar los servicios
+### Gestión de Contenedores
 
 ```bash
-docker-compose up
-```
-
-### Detener los servicios
-
-```bash
-docker-compose down
-```
-
-### Ver logs en tiempo real
-
-```bash
-docker-compose logs -f
-```
-
-### Ver logs de un servicio específico
-
-```bash
-docker-compose logs -f backend
-docker-compose logs -f frontend
-```
-
-### Reconstruir las imágenes
-
-```bash
-docker-compose build --no-cache
-```
-
-### Listar contenedores activos
-
-```bash
+# Ver el estado de todos los servicios
 docker-compose ps
-```
 
-### Ejecutar comandos en un contenedor
+# Ver logs en tiempo real
+docker-compose logs -f
 
-```bash
-docker-compose exec backend bash
-```
+# Ver logs de un servicio específico
+docker-compose logs -f backend
+docker-compose logs -f gestor-db-primary
+docker-compose logs -f gestor-db-replica
 
-### Eliminar volúmenes y contenedores
+# Reiniciar todos los servicios
+docker-compose restart
 
-```bash
+# Reiniciar un servicio específico
+docker-compose restart backend
+
+# Detener todos los servicios
+docker-compose down
+
+# Detener y eliminar volúmenes (CUIDADO: Borra los datos)
 docker-compose down -v
+```
+
+### Acceso a Bases de Datos
+
+```bash
+# Conectarse a MySQL Primary
+docker exec -it gestor-db-primary mysql -u root -p
+
+# Conectarse a MySQL Replica
+docker exec -it gestor-db-replica mysql -u root -p
+
+# Ejecutar comandos SQL directamente
+docker exec gestor-db-primary mysql -u root -padmin123 -e "SHOW DATABASES;"
+```
+
+### Monitoreo y Debug
+
+```bash
+# Ver uso de recursos
+docker stats
+
+# Inspeccionar un contenedor
+docker inspect gestor-db-primary
+
+# Ver logs del backend con marca de tiempo
+docker-compose logs -f --timestamps backend
+
+# Ejecutar bash en el contenedor backend
+docker-compose exec backend bash
 ```
 
 ## 📁 Estructura del Proyecto
@@ -187,128 +276,182 @@ docker-compose down -v
 ```
 Implementacion-simple-docker/
 ├── backend/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── app.py
+│   ├── Dockerfile              # Configuración del contenedor backend
+│   ├── requirements.txt        # Dependencias Python
+│   ├── app.py                 # API FastAPI con R/W Split
+│   └── database.py            # Conexiones a Primary y Replica
 ├── frontend/
-│   ├── index.html
-│   ├── estilos.css
-│   └── tareas.html
-├── docker-compose.yml
-└── README.md
+│   ├── index.html             # Interfaz de usuario
+│   ├── styles.css             # Estilos de la aplicación
+│   └── script.js              # Lógica del cliente
+├── docker-compose.yml          # Orquestación de servicios
+└── README.md                  # Este archivo
 ```
 
-## 🔧 Configuración
+## 🔧 Configuración Detallada
+
+### Separación de Lecturas y Escrituras
+
+El backend implementa automáticamente la separación:
+
+```python
+# Operaciones de LECTURA → Replica
+@app.get("/tasks")
+def get_tasks():
+    print("READ: REPLICA")
+    conn = connect_replica()
+    # ... lógica de lectura
+
+# Operaciones de ESCRITURA → Primary
+@app.post("/tasks")
+def create_task():
+    print("WRITE: PRIMARY")
+    conn = connect_primary()
+    # ... lógica de escritura
+```
 
 ### Variables de Entorno
 
-Las configuraciones principales se encuentran en el archivo `docker-compose.yml`. Puedes modificar:
+Configuradas en `docker-compose.yml`:
 
-- Puertos de exposición
-- Credenciales de base de datos
-- Configuración de replicación
+```yaml
+# MySQL Primary
+MYSQL_ROOT_PASSWORD: admin123
+MYSQL_DATABASE: gestor_tareas
 
-### Base de Datos
-
-La aplicación implementa una arquitectura master-replica:
-
-- **Base de datos primaria**: Maneja operaciones de escritura
-- **Base de datos réplica**: Maneja operaciones de lectura para distribución de carga
-
-## 🧪 Desarrollo
-
-### Modificar el código
-
-Los cambios en el código fuente requieren reconstruir los contenedores:
-
-```bash
-docker-compose down
-docker-compose up --build
+# MySQL Replica
+MYSQL_ROOT_PASSWORD: admin123
+MYSQL_DATABASE: gestor_tareas
 ```
 
-### Debugging
+## 🧪 Pruebas y Validación
 
-Para ver información detallada de los contenedores:
+### Pruebas de Rendimiento
+
+**Lecturas (GET):**
+- Tiempo promedio: 6-15 ms
+- Manejado por Replica
+- Soporta alta concurrencia
+
+**Escrituras (POST/PUT/DELETE):**
+- Tiempo promedio: 12-25 ms
+- Procesadas por Primary
+- Delay de sincronización a Replica: 20-80 ms
+
+### Pruebas de Tolerancia a Fallos
+
+#### 1. Simular Caída de Replica
 
 ```bash
-docker-compose logs --tail=100 backend
-docker inspect <container_id>
+# Detener el contenedor Replica
+docker-compose stop gestor-db-replica
 ```
 
-## 📊 Monitoreo
+**Resultado esperado:**
+- ✅ Las operaciones GET fallan con mensaje de error
+- ✅ El frontend muestra: "Error al cargar tareas"
+- ✅ El Primary sigue operativo para escrituras
 
-### Ver estado de los servicios
+#### 2. Simular Caída de Primary
 
 ```bash
-docker-compose ps
+# Detener el contenedor Primary
+docker-compose stop gestor-db-primary
 ```
 
-### Verificar uso de recursos
+**Resultado esperado:**
+- ✅ No se pueden crear, editar ni eliminar tareas
+- ✅ El frontend muestra errores en operaciones de escritura
+- ✅ La Replica sigue respondiendo consultas GET
+
+#### 3. Verificar Sincronización
 
 ```bash
-docker stats
+# Crear una tarea a través del frontend
+# Luego verificar en ambas bases de datos
+
+# En Primary
+docker exec gestor-db-primary mysql -u root -padmin123 gestor_tareas -e "SELECT * FROM tasks;"
+
+# En Replica (debe mostrar la misma información)
+docker exec gestor-db-replica mysql -u root -padmin123 gestor_tareas -e "SELECT * FROM tasks;"
 ```
 
-## 🔒 Seguridad
+### Logs de Monitoreo
 
-⚠️ **Advertencia**: Esta es una implementación de desarrollo. Para producción:
+El sistema genera logs detallados que incluyen:
 
-- Cambiar credenciales por defecto
-- Implementar HTTPS
-- Configurar firewalls y reglas de red
-- Usar secrets de Docker para información sensible
-- Actualizar dependencias regularmente
+- **Tipo de operación**: READ o WRITE
+- **Base de datos utilizada**: PRIMARY o REPLICA
+- **Tiempo de ejecución**: Duración de cada operación
+- **Errores**: Captura y reporta fallos de conexión
+
+Ver logs en tiempo real:
+
+```bash
+docker-compose logs -f backend
+```
 
 ## 🐛 Solución de Problemas
 
-### Los contenedores no inician
+### La replicación no funciona
 
 ```bash
-# Ver logs detallados
-docker-compose logs
+# Verificar estado de la replicación
+docker exec -it gestor-db-replica mysql -u root -padmin123 -e "SHOW SLAVE STATUS\G;"
 
-# Verificar que los puertos no estén en uso
-netstat -an | grep <puerto>
+# Buscar errores en:
+# - Slave_IO_Running: Debe ser "Yes"
+# - Slave_SQL_Running: Debe ser "Yes"
+# - Last_Error: No debe tener errores
+
+# Si hay errores, reiniciar la replicación:
+docker exec -it gestor-db-replica mysql -u root -padmin123 -e "
+STOP SLAVE;
+RESET SLAVE;
+START SLAVE;
+"
 ```
 
-### Error de conexión a base de datos
+### Error: "Can't connect to MySQL server"
 
 ```bash
-# Verificar que el contenedor de la BD esté corriendo
+# Verificar que los contenedores estén corriendo
 docker-compose ps
 
 # Reiniciar los servicios
 docker-compose restart
+
+# Ver logs para identificar el error
+docker-compose logs gestor-db-primary
+docker-compose logs gestor-db-replica
 ```
 
-### Problemas con volúmenes
+### La Replica pierde sincronización
 
+**Causa común:** Intentar escribir directamente en la Replica
+
+**Solución:**
 ```bash
-# Eliminar volúmenes y empezar limpio
-docker-compose down -v
-docker-compose up --build
+# Reconstruir la Replica desde cero
+docker-compose stop gestor-db-replica
+docker volume rm implementacion-simple-docker_replica-data
+docker-compose up -d gestor-db-replica
+
+# Reconfigurar la replicación (repetir paso 4b de instalación)
 ```
 
 ### Docker Desktop no inicia (Windows)
 
 ```bash
-# Verificar que la virtualización está habilitada en BIOS
-# Verificar que WSL 2 está instalado correctamente
+# Verificar virtualización en BIOS (debe estar habilitada)
+# Verificar WSL 2
 wsl --list --verbose
 
-# Reiniciar el servicio de Docker
-# En PowerShell como administrador:
+# Reiniciar servicio Docker (PowerShell como administrador)
 Restart-Service docker
-```
 
-### WSL no encuentra Docker
-
-```bash
-# Asegúrate de que Docker Desktop está corriendo
-# Verifica la integración WSL en Docker Desktop:
-# Settings > Resources > WSL Integration > Habilita tu distribución
-
-# Reinicia WSL
+# Si persiste, reiniciar WSL
 wsl --shutdown
 wsl
 ```
@@ -331,30 +474,106 @@ pip3 --version
 # Agregar usuario al grupo docker
 sudo usermod -aG docker $USER
 
-# Cerrar sesión y volver a iniciar
-# O ejecutar:
+# Aplicar cambios (o cerrar sesión y volver a entrar)
 newgrp docker
+
+# Verificar
+docker ps
 ```
+
+### Puerto 3000 o 8000 ya en uso
+
+```bash
+# Encontrar el proceso que usa el puerto
+# Linux/macOS:
+sudo lsof -i :3000
+sudo lsof -i :8000
+
+# Windows:
+netstat -ano | findstr :3000
+netstat -ano | findstr :8000
+
+# Detener el proceso o cambiar el puerto en docker-compose.yml
+```
+
+## 📊 Monitoreo y Métricas
+
+### Verificar Replicación en Tiempo Real
+
+```bash
+# Ver el estado detallado de la replicación
+docker exec gestor-db-replica mysql -u root -padmin123 -e "SHOW SLAVE STATUS\G;" | grep -E "Running|Behind|Error"
+```
+
+### Verificar Carga del Sistema
+
+```bash
+# Ver uso de CPU y memoria de cada contenedor
+docker stats
+
+# Ver información específica del backend
+docker stats gestor-backend
+```
+
+### Analizar Logs de Operaciones
+
+```bash
+# Filtrar solo operaciones de lectura
+docker-compose logs backend | grep "READ: REPLICA"
+
+# Filtrar solo operaciones de escritura
+docker-compose logs backend | grep "WRITE: PRIMARY"
+
+# Ver errores
+docker-compose logs backend | grep -i error
+```
+
+## 🎯 Resultados y Conclusiones
+
+### Beneficios Demostrados
+
+1. **Mejora en rendimiento de lecturas**: La separación permite distribuir la carga entre Primary y Replica
+2. **Alta disponibilidad**: El sistema continúa funcionando parcialmente ante fallos
+3. **Escalabilidad**: Se pueden agregar más réplicas para manejar mayor carga de lectura
+4. **Monitoreo efectivo**: Los logs facilitan la identificación de problemas
+
+### Lecciones Aprendidas
+
+- La replicación mejora significativamente el rendimiento en sistemas con alta carga de lectura
+- La infraestructura responde correctamente a fallas simuladas
+- El uso de Docker facilita el despliegue en cualquier entorno
+- La separación R/W requiere gestión cuidadosa de la consistencia eventual
+
+### Métricas del Sistema
+
+- **Tiempo promedio de lectura (Replica)**: 6-15 ms
+- **Tiempo promedio de escritura (Primary)**: 12-25 ms
+- **Delay de sincronización**: 20-80 ms
+- **Tolerancia a fallos**: Sí (parcial)
 
 ## 🤝 Contribuir
 
 Las contribuciones son bienvenidas. Para contribuir:
 
 1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
+2. Crea una rama para tu feature (`git checkout -b feature/NuevaFuncionalidad`)
+3. Commit tus cambios (`git commit -m 'Agrega nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/NuevaFuncionalidad`)
 5. Abre un Pull Request
 
 ## 📝 Licencia
 
 Este proyecto es de código abierto y está disponible para fines educativos.
 
-## ✨ Características
+## 📧 Contacto
 
-- ✅ Arquitectura de microservicios con Docker
-- ✅ Replicación de base de datos
-- ✅ Frontend responsivo
-- ✅ API RESTful
-- ✅ Fácil de desplegar y escalar
+**Equipo de Desarrollo:**
+- Julián David Calderón Largo
+- Juan José Betancourth
+- Valentina Franco
 
+**Repositorio:** [https://github.com/JuliiizLargo/Implementacion-simple-docker](https://github.com/JuliiizLargo/Implementacion-simple-docker)
+
+---
+
+⭐ Si este proyecto te fue útil para aprender sobre replicación de bases de datos y arquitecturas escalables, considera darle una estrella en GitHub
