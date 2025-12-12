@@ -192,8 +192,8 @@ Implementacion-simple-docker/
 │   └── app.py
 ├── frontend/
 │   ├── index.html
-│   ├── styles.css
-│   └── script.js
+│   ├── estilos.css
+│   └── tareas.html
 ├── docker-compose.yml
 └── README.md
 ```
