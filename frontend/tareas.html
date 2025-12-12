@@ -1,0 +1,207 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Gestor de Tareas</title>
+    <link rel="stylesheet" href="estilos.css">
+
+    <style>
+      .hidden { display: none; }
+
+      /* Caja que contiene cada tarea, todo centrado */
+      .task-item {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      
+      .edit-box {
+        width: 100%;
+        margin-top: 8px;
+        padding: 8px;
+      }
+
+      .task-edit-desc {
+        width: 100%;
+        margin-top: 8px;
+        padding: 8px;
+        resize: vertical;
+      }
+
+      .error-message {
+        color: red;
+        font-weight: bold;
+        margin: 10px 0;
+        text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="main-container">
+      <h1>Gestor de Tareas</h1>
+      <p id="user-info"></p>
+      <div id="message" class="error-message hidden"></div>
+
+      <div class="task-form">
+        <input type="text" id="newTask" placeholder="Nueva tarea...">
+        <input type="text" id="newDesc" placeholder="Descripción (opcional)">
+        <button id="addBtn">Agregar</button>
+      </div>
+
+      <ul id="taskList"></ul>
+
+      <button id="logoutBtn" class="logout">Cerrar sesión</button>
+    </div>
+
+    <script>
+      const backend = "http://localhost:8000";
+
+      const user = localStorage.getItem("user");
+      const userInfo = document.getElementById("user-info");
+      const messageBox = document.getElementById("message");
+
+      if (!user) {
+        window.location.href = "index.html";
+      } else {
+        userInfo.textContent = "Sesión iniciada como: " + user;
+      }
+
+      const taskList = document.getElementById("taskList");
+      const newTaskInput = document.getElementById("newTask");
+      const newDescInput = document.getElementById("newDesc");
+
+      function showMessage(msg) {
+        messageBox.textContent = msg;
+        messageBox.classList.remove("hidden");
+        setTimeout(() => messageBox.classList.add("hidden"), 5000);
+      }
+
+      // ---- CARGAR TAREAS ----
+      async function loadTasks() {
+        taskList.innerHTML = "<li>Cargando...</li>";
+        try {
+          const res = await fetch(`${backend}/tasks`);
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.detail || "Error al cargar tareas");
+          }
+          const tasks = await res.json();
+
+          taskList.innerHTML = "";
+          if (tasks.length === 0) {
+            taskList.innerHTML = "<li>No hay tareas.</li>";
+            return;
+          }
+
+          tasks.forEach(t => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+              <div class="task-item">
+                <strong class="task-title-text" id="title-${t.id}">${t.title}</strong>
+                <p class="task-description" id="desc-${t.id}">
+                  ${t.description || "Sin descripción"}
+                </p>
+                <input id="edit-title-${t.id}" class="edit-box hidden" value="${t.title}">
+                <textarea id="edit-desc-${t.id}" class="task-edit-desc hidden">${t.description ?? ''}</textarea>
+                <div class="task-buttons">
+                  <button onclick="enableEdit(${t.id})" class="btn-edit">✏️</button>
+                  <button onclick="updateTask(${t.id})" class="btn-save">💾</button>
+                  <button onclick="deleteTask(${t.id})" class="btn-delete">🗑️</button>
+                </div>
+              </div>
+            `;
+            taskList.appendChild(li);
+          });
+        } catch (err) {
+          taskList.innerHTML = `<li style="color:red;">${err.message}</li>`;
+          showMessage(err.message); 
+        }
+      }
+
+      // ---- AGREGAR TAREA ----
+      async function addTask() {
+        const title = newTaskInput.value.trim();
+        const description = newDescInput.value.trim();
+        if (!title) return showMessage("Escribe un título");
+
+        try {
+          const res = await fetch(`${backend}/tasks`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, description }),
+          });
+
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.detail || "Error al crear tarea");
+          }
+
+          newTaskInput.value = "";
+          newDescInput.value = "";
+          loadTasks();
+
+        } catch (err) {
+          showMessage(err.message); 
+        }
+      }
+
+      // ---- ACTIVAR EDICIÓN ----
+      function enableEdit(id) {
+        document.getElementById(`title-${id}`).classList.add("hidden");
+        document.getElementById(`desc-${id}`).classList.add("hidden");
+        document.getElementById(`edit-title-${id}`).classList.remove("hidden");
+        document.getElementById(`edit-desc-${id}`).classList.remove("hidden");
+        document.getElementById(`edit-title-${id}`).focus();
+      }
+
+      // ---- GUARDAR CAMBIOS ----
+      async function updateTask(id) {
+        const title = document.getElementById(`edit-title-${id}`).value.trim();
+        const description = document.getElementById(`edit-desc-${id}`).value.trim();
+
+        try {
+          const res = await fetch(`${backend}/tasks/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, description }),
+          });
+
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.detail || "Error al actualizar tarea");
+          }
+
+          loadTasks();
+        } catch (err) {
+          showMessage(err.message); 
+        }
+      }
+
+      // ---- ELIMINAR ----
+      async function deleteTask(id) {
+        try {
+          const res = await fetch(`${backend}/tasks/${id}`, { method: "DELETE" });
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.detail || "Error al eliminar tarea");
+          }
+
+          loadTasks();
+        } catch (err) {
+          showMessage(err.message); 
+        }
+      }
+
+      document.getElementById("addBtn").onclick = addTask;
+      document.getElementById("logoutBtn").onclick = () => {
+        localStorage.removeItem("user");
+        window.location.href = "index.html";
+      };
+
+      loadTasks();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,253 @@
+/* ===== Reset global ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #4f46e5, #6d28d9);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* ===== LOGIN ===== */
+
+.login-container {
+  background: #ffffff;
+  color: #333;
+  padding: 40px 50px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+  width: 350px;
+  text-align: center;
+  animation: fadeIn 0.8s ease;
+}
+
+.login-container h1 {
+  font-size: 28px;
+  color: #4f46e5;
+  margin-bottom: 10px;
+}
+
+.login-container h2 {
+  font-size: 18px;
+  color: #6b7280;
+  margin-bottom: 25px;
+}
+
+.login-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  transition: 0.3s;
+  font-size: 15px;
+}
+
+.login-container input:focus {
+  border-color: #4f46e5;
+  outline: none;
+  box-shadow: 0 0 5px rgba(79, 70, 229, 0.4);
+}
+
+.login-container button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: #4f46e5;
+  color: #fff;
+  font-size: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.login-container button:hover {
+  background: #4338ca;
+}
+
+#msg {
+  margin-top: 15px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* ===== GESTOR DE TAREAS ===== */
+
+.main-container {
+  background: #ffffff;
+  width: 600px;
+  padding: 35px;
+  border-radius: 18px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+  animation: fadeIn 0.8s ease;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-container h1 {
+  text-align: center;
+  color: #4f46e5;
+  margin-bottom: 10px;
+}
+
+#user-info {
+  text-align: center;
+  font-size: 15px;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+/* Mensajes */
+.error-message {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+/* Formulario agregar tarea */
+.task-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.task-form input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+.task-form input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 4px rgba(79, 70, 229, 0.4);
+}
+
+.task-form button {
+  padding: 10px 14px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.task-form button:hover {
+  background: #4338ca;
+}
+
+/* Lista de tareas */
+#taskList {
+  list-style: none;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-top: 10px;
+  flex: 1;
+  max-height: 100%;
+}
+
+#taskList li {
+  background: #f3f4f6;
+  padding: 18px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Cada tarea */
+.task-item {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.task-title-text {
+  font-size: 18px;
+  color: #1f2937;
+}
+
+.task-description {
+  color: #4b5563;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+/* Campos de edición */
+.edit-box,
+.task-edit-desc {
+  padding: 10px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+.task-edit-desc {
+  resize: vertical;
+  height: 70px;
+}
+
+/* Botones de acción de cada tarea */
+.task-buttons {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.task-buttons button {
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: 0.3s;
+}
+
+.btn-edit { background: #fbbf24; }
+.btn-edit:hover { background: #f59e0b; }
+
+.btn-save { background: #10b981; color: white; }
+.btn-save:hover { background: #059669; }
+
+.btn-delete { background: #ef4444; color: white; }
+.btn-delete:hover { background: #dc2626; }
+
+/* Cerrar sesión */
+.logout {
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px;
+  background: #6b7280;
+  border: none;
+  color: white;
+  font-size: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.logout:hover {
+  background: #4b5563;
+}
+
+/* Animación */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Oculto */
+.hidden { display: none; }
